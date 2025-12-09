@@ -20,7 +20,4 @@ Running Tribe is a full-stack running app where users can track runs, join event
 - Notifications: Firebase Admin
 - Testing: Jest
 
-## Installation
-1. Clone the repo:  
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/running-tribe.git
+
