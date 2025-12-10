@@ -1,13 +1,16 @@
+
 import Route from '../models/Route.js';
 import User from '../models/User.js';
+import { MEMBERSHIP } from "../constants/membershipConstant.js";
 
 // -------------------------
 // Helpers
 // -------------------------
 const filterRoutesForUser = (routes, user) => {
-  if (!user) return routes;              // public → full list
-  if (user.membership === 'basic') return routes.slice(0, 20);
-  return routes;                         // premium
+  if (!user) return routes; // public → full list
+  if (user.membership === MEMBERSHIP.BASIC) return routes.slice(0, MEMBERSHIP.BASIC_ROUTE_LIMIT);
+
+  return routes; // premium
 };
 
 // -------------------------
@@ -40,12 +43,11 @@ export const getRouteById = async (req, res) => {
     const route = await Route.findById(req.params.id);
     if (!route) return res.status(404).json({ message: 'Route not found' });
 
-    // Basic users → check if route is within first 20
-    if (req.user?.membership === 'basic') {
+    if (req.user?.membership === MEMBERSHIP.BASIC) {
       const allRoutes = await Route.find().sort({ createdAt: -1 });
       const index = allRoutes.findIndex(r => r.id === route.id);
 
-      if (index >= 20) {
+      if (index >= MEMBERSHIP.BASIC_ROUTE_LIMIT) {
         return res.status(403).json({
           message: 'Upgrade to premium to access this route.'
         });
@@ -119,8 +121,8 @@ export const downloadRoute = async (req, res) => {
 
     const user = await User.findById(req.user.id);
 
-    if (user.membership === 'basic') {
-      if (user.offlineDownloads >= 5) {
+    if (user.membership === MEMBERSHIP.BASIC) {
+      if (user.offlineDownloads >= MEMBERSHIP.FREE_DOWNLOAD_LIMIT) {
         return res.status(403).json({
           message: 'Offline download limit reached. Upgrade to premium.'
         });

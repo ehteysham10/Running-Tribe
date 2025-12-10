@@ -1,5 +1,4 @@
 
-
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
@@ -8,7 +7,8 @@ import passport from 'passport';
 import path from 'path';
 import http from 'http';
 import { Server as SocketIO } from 'socket.io';
-
+import helmet from 'helmet';
+import mongoSanitize from 'express-mongo-sanitize';
 import connectDB from './config/db.js';
 import './config/passportGoogle.js';
 import initFirebaseAdmin from './config/firebaseAdmin.js';
@@ -24,6 +24,9 @@ import postsRoutes from './routes/postsRoutes.js';
 import messageRoutes from "./routes/messageRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import { initChatSocket } from "./socket/chatSocket.js";
+
+// Import membership constants
+import { MEMBERSHIP } from "./constants/membershipConstant.js";
 
 // -------------------------
 // Express & HTTP server
@@ -45,7 +48,7 @@ export const io = new SocketIO(server, {
 // -------------------------
 // Initialize chat socket
 // -------------------------
-initChatSocket(io); // Pass io explicitly
+initChatSocket(io);
 
 // -------------------------
 // Connect MongoDB
@@ -58,6 +61,8 @@ connectDB();
 app.use(cors());
 app.use(morgan('dev'));
 app.use(passport.initialize());
+app.use(helmet());
+app.use(mongoSanitize());
 
 // -------------------------
 // Body parsers (must come BEFORE routes)
@@ -100,6 +105,7 @@ app.use("/api/payment", paymentRoutes);
 // -------------------------
 import Stripe from "stripe";
 import User from "./models/User.js";
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.get("/payment-success", async (req, res) => {
@@ -116,7 +122,8 @@ app.get("/payment-success", async (req, res) => {
     const user = await User.findOne({ email: session.customer_email });
     if (!user) return res.send("User not found.");
 
-    user.membership = "premium";
+    // Use membership constant 
+    user.membership = MEMBERSHIP.PREMIUM;
     user.premiumExpiresAt = null;
     user.addPremiumHistory({
       plan: session.line_items?.[0]?.price?.id || "unknown",
