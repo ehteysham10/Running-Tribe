@@ -8,7 +8,6 @@ import path from 'path';
 import http from 'http';
 import { Server as SocketIO } from 'socket.io';
 import helmet from 'helmet';
-import mongoSanitize from 'express-mongo-sanitize';
 import connectDB from './config/db.js';
 import './config/passportGoogle.js';
 import initFirebaseAdmin from './config/firebaseAdmin.js';
@@ -62,7 +61,6 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(passport.initialize());
 app.use(helmet());
-app.use(mongoSanitize());
 
 // -------------------------
 // Body parsers (must come BEFORE routes)
